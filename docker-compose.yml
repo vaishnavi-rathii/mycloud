@@ -1,0 +1,67 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mycloud-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mycloud
+      POSTGRES_USER: mycloud
+      POSTGRES_PASSWORD: mycloud_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - mycloud_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mycloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mycloud-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://mycloud:mycloud_secret@postgres:5432/mycloud
+      JWT_SECRET: mycloud_jwt_secret_change_in_production_use_long_random_string
+      STORAGE_PATH: /app/storage
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - storage_data:/app/storage
+    ports:
+      - "3000:3000"
+    networks:
+      - mycloud_internal
+    command: sh -c "node db/migrate.js && node db/seed.js && node server.js"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mycloud-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    networks:
+      - mycloud_internal
+
+networks:
+  mycloud_internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  storage_data:

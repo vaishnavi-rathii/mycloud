@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build output
+frontend/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Storage data (uploaded files)
+backend/storage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes (not committed)
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp

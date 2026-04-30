@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body { @apply bg-cloud-main text-gray-200 text-sm antialiased; }
+  ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-cloud-sidebar; }
+  ::-webkit-scrollbar-thumb { @apply bg-cloud-muted rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-gray-500; }
+}
+
+@layer components {
+  /* AWS-style table */
+  .aws-table { @apply w-full text-xs; }
+  .aws-table thead tr { @apply border-b border-cloud-border bg-cloud-card; }
+  .aws-table thead th { @apply px-3 py-2.5 text-left text-gray-400 font-medium tracking-wide uppercase text-[11px] select-none; }
+  .aws-table tbody tr { @apply border-b border-cloud-border/50 hover:bg-cloud-hover transition-colors cursor-pointer; }
+  .aws-table tbody td { @apply px-3 py-2.5 text-gray-300; }
+  .aws-table tbody tr.selected { @apply bg-aws-orange/5 border-aws-orange/20; }
+
+  /* AWS link style */
+  .aws-link { @apply text-blue-400 hover:text-blue-300 hover:underline cursor-pointer transition-colors; }
+
+  /* Card */
+  .aws-card { @apply bg-cloud-card border border-cloud-border rounded; }
+
+  /* Input */
+  .aws-input { @apply bg-cloud-input border border-cloud-border rounded px-3 py-2 text-gray-200 text-sm
+    focus:outline-none focus:border-aws-orange/60 focus:ring-1 focus:ring-aws-orange/20
+    placeholder-gray-600 w-full transition-colors; }
+
+  /* Select */
+  .aws-select { @apply aws-input appearance-none cursor-pointer; }
+}
+
+@layer utilities {
+  .text-aws-orange { color: #FF9900; }
+  .bg-aws-orange { background-color: #FF9900; }
+  .border-aws-orange { border-color: #FF9900; }
+  .ring-aws-orange { --tw-ring-color: #FF9900; }
+}
+
+/* Page transition */
+.page-enter { animation: fadeIn 0.15s ease-out; }
+
+/* Toast animations */
+.toast-enter { animation: slideUp 0.2s ease-out; }
+.toast-exit { animation: fadeIn 0.15s ease-out reverse; }
