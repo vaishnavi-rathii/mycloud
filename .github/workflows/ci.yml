@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mycloud
+          POSTGRES_PASSWORD: mycloud_secret
+          POSTGRES_DB: mycloud
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://mycloud:mycloud_secret@localhost:5432/mycloud
+      JWT_SECRET: test_jwt_secret_32_chars_minimum__
+      NODE_ENV: test
+      STORAGE_PATH: /tmp/mycloud-test-storage
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: backend
+
+      - name: Run database migrations
+        run: node db/migrate.js
+        working-directory: backend
+
+      - name: Seed database
+        run: node db/seed.js
+        working-directory: backend
+
+      - name: Run tests
+        run: npm test
+        working-directory: backend
