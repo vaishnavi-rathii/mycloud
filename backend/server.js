@@ -69,12 +69,17 @@ io.on('connection', (socket) => {
             memLimit: stats.memory_stats.limit || 0,
             timestamp: Date.now(),
           });
-        } catch {}
+        } catch (err) {
+          console.error(`[metrics] parse error for instance ${instanceId}:`, err.message);
+        }
       });
 
-      socket.on('disconnect', () => { try { stream.destroy(); } catch {} });
-      socket.on('unsubscribe_metrics', () => { try { stream.destroy(); } catch {} });
-    } catch {}
+      stream.on('error', (err) => console.error(`[metrics] stream error for instance ${instanceId}:`, err.message));
+      socket.on('disconnect', () => { try { stream.destroy(); } catch (_) { /* already closed */ } });
+      socket.on('unsubscribe_metrics', () => { try { stream.destroy(); } catch (_) { /* already closed */ } });
+    } catch (err) {
+      console.error(`[metrics] subscribe error for instance ${instanceId}:`, err.message);
+    }
   });
 
   // Subscribe to container log stream
@@ -95,9 +100,12 @@ io.on('connection', (socket) => {
         socket.emit('log_line', { containerId, message: msg.trim(), timestamp: new Date() });
       });
 
-      socket.on('disconnect', () => { try { stream.destroy(); } catch {} });
-      socket.on('unsubscribe_logs', () => { try { stream.destroy(); } catch {} });
-    } catch {}
+      stream.on('error', (err) => console.error(`[logs] stream error for container ${containerId}:`, err.message));
+      socket.on('disconnect', () => { try { stream.destroy(); } catch (_) { /* already closed */ } });
+      socket.on('unsubscribe_logs', () => { try { stream.destroy(); } catch (_) { /* already closed */ } });
+    } catch (err) {
+      console.error(`[logs] subscribe error for container ${containerId}:`, err.message);
+    }
   });
 });
 
