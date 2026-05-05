@@ -13,11 +13,14 @@ const DB_PASSWORD_PREFIX = 'mycloudpw_';
 const BASE_PG_PORT = 15432;
 
 async function findFreePort(startPort) {
-  const result = await pool.query('SELECT host_port FROM managed_databases WHERE host_port IS NOT NULL');
-  const usedPorts = new Set(result.rows.map((r) => r.host_port));
-  let port = startPort;
-  while (usedPorts.has(port)) port++;
-  return port;
+  // Single atomic query: MAX(host_port) + 1, floored at startPort.
+  // Avoids the O(n) client-side scan and reduces the race window to
+  // the DB round-trip (unique constraint on host_port catches the rest).
+  const result = await pool.query(
+    'SELECT COALESCE(MAX(host_port), $1 - 1) + 1 AS next_port FROM managed_databases',
+    [startPort]
+  );
+  return Math.max(parseInt(result.rows[0].next_port, 10), startPort);
 }
 
 // GET /api/databases
