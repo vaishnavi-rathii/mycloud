@@ -149,8 +149,16 @@ router.put('/:bucket/:key(*)', authenticate, upload.single('file'), async (req, 
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     const key = req.params.key;
-    const destDir = path.join(STORAGE_ROOT, bucket.id, path.dirname(key));
-    const destPath = path.join(STORAGE_ROOT, bucket.id, key);
+    const bucketRoot = path.resolve(path.join(STORAGE_ROOT, bucket.id));
+    const destPath = path.resolve(path.join(bucketRoot, key));
+
+    // Reject keys that escape the bucket directory (path traversal)
+    if (!destPath.startsWith(bucketRoot + path.sep)) {
+      fs.rmSync(req.file.path, { force: true });
+      return res.status(400).json({ error: 'Invalid object key' });
+    }
+
+    const destDir = path.dirname(destPath);
     fs.mkdirSync(destDir, { recursive: true });
     fs.renameSync(req.file.path, destPath);
 
